@@ -1,0 +1,38 @@
+{
+  "meeting_info": {
+    "title": "LIS 시스템 개발 회의",
+    "date": "2026-01-22",
+    "attendees": "김철수, 이영희, 박민수",
+    "project": "LIS 시스템 v2.0"
+  },
+  "segments": [
+    {
+      "start": 10.5,
+      "end": 25.3,
+      "text": "오늘은 EMR 연동 기능에 대해 논의하겠습니다. 현재 HL7 메시지 수신 부분에서 이슈가 있고요.",
+      "words": [
+        {"start": 10.5, "end": 12.0, "word": "오늘은", "probability": 0.95},
+        {"start": 12.0, "end": 13.5, "word": "EMR", "probability": 0.92},
+        {"start": 13.5, "end": 15.0, "word": "연동", "probability": 0.97},
+        {"start": 15.0, "end": 16.5, "word": "기능에", "probability": 0.94},
+        {"start": 16.5, "end": 18.0, "word": "대해", "probability": 0.96},
+        {"start": 18.0, "end": 20.0, "word": "논의하겠습니다.", "probability": 0.93},
+        {"start": 20.5, "end": 22.0, "word": "현재", "probability": 0.95},
+        {"start": 22.0, "end": 23.5, "word": "HL7", "probability": 0.91},
+        {"start": 23.5, "end": 25.3, "word": "메시지 수신 부분에서 이슈가 있고요.", "probability": 0.89}
+      ]
+    },
+    {
+      "start": 90.2,
+      "end": 115.8,
+      "text": "네, HbA1c와 creatinine 같은 검사 결과가 제대로 전달되지 않는 문제가 있습니다. 특히 AST, ALT 수치가 표준 형식과 달라서 파싱이 어렵습니다.",
+      "words": []
+    },
+    {
+      "start": 310.5,
+      "end": 340.2,
+      "text": "그래서 우리는 FHIR 방식으로 전환하기로 결정했습니다. 다음 주까지 API 설계를 마치고, 김철수 님이 구현을 맡아주시기로 했습니다. 기한은 2월 15일입니다.",
+      "words": []
+    }
+  ]
+}
