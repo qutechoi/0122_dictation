@@ -3,7 +3,7 @@ import numpy as np
 from pathlib import Path
 from typing import List, Tuple
 import torch
-import torchaudio
+from scipy.io import wavfile
 from .config import Config
 
 logger = logging.getLogger(__name__)
@@ -38,13 +38,19 @@ class VADSegmenter:
         logger.info(f"Segmenting audio using VAD: {wav_path}")
 
         try:
-            waveform, sample_rate = torchaudio.load(str(wav_path))
+            sample_rate, audio_data = wavfile.read(str(wav_path))
 
-            if sample_rate != self.config.sample_rate:
-                resampler = torchaudio.transforms.Resample(sample_rate, self.config.sample_rate)
-                waveform = resampler(waveform)
+            # Convert to float32 normalized to [-1, 1]
+            if audio_data.dtype == np.int16:
+                audio = audio_data.astype(np.float32) / 32768.0
+            elif audio_data.dtype == np.int32:
+                audio = audio_data.astype(np.float32) / 2147483648.0
+            else:
+                audio = audio_data.astype(np.float32)
 
-            audio = waveform.squeeze().numpy()
+            # Handle stereo by taking first channel
+            if len(audio.shape) > 1:
+                audio = audio[:, 0]
 
             speech_timestamps = self.get_speech_timestamps(
                 audio,

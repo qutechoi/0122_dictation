@@ -46,7 +46,7 @@ class ASREngine:
                 condition_on_previous_text=False,
                 word_timestamps=True,
                 initial_prompt=self.config.initial_prompt,
-                segments=[(start_sec, end_sec)],
+                clip_timestamps=[start_sec, end_sec],
             )
 
             results = []
