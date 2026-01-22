@@ -1,19 +1,19 @@
-# MP3 Dictation & Meeting Minutes Generator
+# MP3 음성 받아쓰기 및 회의록 자동 생성기
 
-오프라인 Windows 데스크톱 앱 - MP3 회의 녹음을 받아쓰기하고 회의록을 생성합니다.
+오프라인 환경에서 MP3 회의 녹음 파일을 텍스트로 변환하고 회의록을 자동 생성하는 도구입니다.
 
-## 기능
+## 주요 기능
 
-- 오프라인 STT (faster-whisper)
-- VAD 기반 발화 구간 분할 (Silero VAD)
-- 회의록 자동 생성
-- 체크포인트 지원 (중단 후 재개 가능)
-- CLI + GUI (PySide6)
-- RTX 4090 가속 지원
+- **오프라인 음성 인식**: faster-whisper 기반 STT (인터넷 연결 불필요)
+- **음성 구간 자동 감지**: Silero VAD로 발화 구간 분할
+- **회의록 자동 생성**: 논의 내용, 결정사항, Action Items 자동 추출
+- **체크포인트 지원**: 중단 후 재개 가능
+- **GPU 가속**: CUDA 지원 (RTX 4090 등)
+- **다양한 출력 형식**: JSON, Markdown, SRT 자막
 
 ## 설치
 
-### 1. Python 3.10+ 설치
+### 1. Python 3.10 이상 설치
 
 ### 2. 의존성 설치
 
@@ -24,37 +24,77 @@ pip install -r requirements.txt
 ### 3. FFmpeg 설치
 
 **Windows:**
-1. [FFmpeg](https://ffmpeg.org/download.html) 다운로드
-2. 압축 해제 후 `bin` 폴더를 PATH에 추가
+1. [FFmpeg 공식 사이트](https://ffmpeg.org/download.html)에서 다운로드
+2. 압축 해제 후 `bin` 폴더를 시스템 PATH에 추가
 
-**확인:**
+**설치 확인:**
 ```bash
 ffmpeg -version
 ```
 
-## 사용 방법
+## 사용법
 
-### CLI
+### CLI (명령줄)
 
 ```bash
-python main.py --input meeting.mp3 --output output --model large-v3
+python main.py --input <MP3파일> [옵션]
 ```
 
-**옵션:**
-- `--input`: 입력 MP3 파일 (필수)
-- `--output`: 출력 폴더 (기본: output)
-- `--model`: 모델 크기 (large-v3, large-v2, medium, small, base)
-- `--compute-type`: 연산 타입 (int8_float16, float16, float32, int8)
-- `--language`: 언어 (ko, en, auto, ja, zh)
-- `--device`: 장치 (cuda, cpu)
-- `--workers`: 워커 수 (기본: 1)
-- `--prompt`: Initial Prompt (용어 사전)
-- `--meeting-title`: 회의명
-- `--meeting-date`: 회의 일시
-- `--attendees`: 참석자
-- `--project`: 프로젝트명
+### 필수 옵션
 
-### GUI
+| 옵션 | 설명 |
+|------|------|
+| `--input` | 입력 MP3 파일 경로 |
+
+### 선택 옵션
+
+| 옵션 | 기본값 | 설명 |
+|------|--------|------|
+| `--output` | `output` | 출력 폴더 |
+| `--model` | `large-v3` | 모델 크기 (`large-v3`, `large-v2`, `medium`, `small`, `base`) |
+| `--compute-type` | `int8_float16` | 연산 타입 (`int8_float16`, `float16`, `float32`, `int8`) |
+| `--language` | `ko` | 언어 코드 (`ko`, `en`, `ja`, `zh`, `auto`) |
+| `--device` | `cuda` | 장치 (`cuda`, `cpu`) |
+| `--workers` | `1` | 워커 수 |
+| `--prompt` | - | 전문 용어 힌트 (Initial Prompt) |
+
+### 회의록 메타데이터
+
+| 옵션 | 설명 |
+|------|------|
+| `--meeting-title` | 회의명 |
+| `--meeting-date` | 회의 일시 |
+| `--attendees` | 참석자 |
+| `--project` | 프로젝트명 |
+
+### 사용 예시
+
+**기본 사용:**
+```bash
+python main.py --input meeting.mp3
+```
+
+**회의 정보 포함:**
+```bash
+python main.py --input meeting.mp3 \
+  --output results \
+  --meeting-title "주간 회의" \
+  --meeting-date "2026-01-22" \
+  --attendees "김철수, 이영희" \
+  --project "신규 프로젝트"
+```
+
+**CPU만 사용 (GPU 없는 경우):**
+```bash
+python main.py --input meeting.mp3 --device cpu --model medium
+```
+
+**전문 용어 힌트:**
+```bash
+python main.py --input meeting.mp3 --prompt "EMR, LIS, FHIR, HL7, HbA1c"
+```
+
+### GUI 실행
 
 ```bash
 python app/ui/gui.py
@@ -62,120 +102,67 @@ python app/ui/gui.py
 
 ## 출력 파일
 
-### 1. transcript.json
-```json
-{
-  "meeting_info": {
-    "title": "프로젝트 회의",
-    "date": "2026-01-22",
-    "attendees": "김철수, 이영희",
-    "project": "LIS 시스템 개발"
-  },
-  "segments": [
-    {
-      "start": 10.5,
-      "end": 25.3,
-      "text": "오늘은 EMR 연동 기능에 대해 논의하겠습니다.",
-      "words": [...]
-    }
-  ]
-}
-```
+| 파일 | 용도 |
+|------|------|
+| `transcript.json` | 프로그램 연동용 (타임스탬프 포함) |
+| `transcript.md` | 전문 읽기용 |
+| `transcript.srt` | 영상 자막용 |
+| `minutes.md` | 회의록 |
 
-### 2. transcript.md
+### 출력 예시
+
+**transcript.md:**
 ```markdown
-# 회의 녹음 전문 (Transcript)
-
-**회의명**: 프로젝트 회의
-**일시**: 2026-01-22
-**참석자**: 김철수, 이영희
-
----
-
 ## [1] 00:00:10 - 00:00:25
 
 오늘은 EMR 연동 기능에 대해 논의하겠습니다.
 ```
 
-### 3. minutes.md
+**minutes.md:**
 ```markdown
-# 회의록 (Meeting Minutes)
-
-## 회의 개요
-
-- **회의명**: 프로젝트 회의
-- **일시**: 2026-01-22
-- **참석자**: 김철수, 이영희
-- **프로젝트**: LIS 시스템 개발
-
 ## 논의 내용
 
-- EMR 연동 방식 검토 (근거: 00:00:10-00:00:25)
-- LIS 인터페이스 설계 (근거: 00:01:30-00:02:10)
+- EMR 연동 방식 검토 (근거: 00:00:10)
 
 ## 결정사항
 
-- HL7 FHIR 방식 채택 (근거: 00:05:20-00:05:35)
+- HL7 FHIR 방식 채택 (근거: 00:05:20)
 
 ## Action Items
 
-1. FHIR API 구현 (근거: 00:10:15-00:10:40)
-   - 담당자: 김철수
-   - 기한: 2026-02-15
-
-## 리스크/이슈
-
-리스크/이슈 없음
-
-## 추가 확인 필요 (Open Questions)
-
-추가 확인 필요 없음
+1. FHIR API 구현 (근거: 00:10:15)
+   - 담당자/기한: 미정
 ```
 
 ## 오프라인 모델 설정
 
-### huggingface-cli 설치
+인터넷 없이 사용하려면 모델을 미리 다운로드하세요.
+
+### Whisper 모델 다운로드
+
 ```bash
 pip install huggingface-cli
+huggingface-cli download Systran/faster-whisper-large-v3 --local-dir models/whisper-large-v3
 ```
 
-### 모델 사전 다운로드
+### Silero VAD 모델 다운로드
 
 ```bash
-# Whisper 모델
-huggingface-cli download Systran/faster-whisper-large-v3 --local-dir models/whisper-large-v3
-
-# Silero VAD
 python -c "import torch; torch.hub.load('snakers4/silero-vad', model='silero_vad')"
 ```
 
-### 모델 경로 지정
+### 로컬 모델 사용
 
 ```bash
 python main.py --input meeting.mp3 --model models/whisper-large-v3
 ```
 
-## 빌드 (Windows exe)
+## 성능
 
-### PyInstaller 설치
-
-```bash
-pip install pyinstaller
-```
-
-### 빌드 실행
-
-```bash
-pyinstaller --onefile --windowed \
-  --name DictationApp \
-  --icon assets/icon.ico \
-  --add-data "app:app" \
-  app/ui/gui.py
-```
-
-### 필요한 데이터 포함
-
-FFmpeg와 모델 파일을 별도로 배포하거나 설치 가이드를 제공하세요.
+| 환경 | 60분 MP3 처리 시간 |
+|------|-------------------|
+| RTX 4090 (CUDA) | 약 15-20분 |
+| CPU만 사용 | 약 2-3시간 |
 
 ## 트러블슈팅
 
@@ -185,20 +172,15 @@ FFmpeg와 모델 파일을 별도로 배포하거나 설치 가이드를 제공�
 
 ### FFmpeg 오류
 - FFmpeg가 PATH에 포함되어 있는지 확인
-- `ffmpeg -version` 실행해보세요
+- `ffmpeg -version` 실행해서 확인
 
 ### 메모리 부족
 - 모델 크기를 `medium` 또는 `small`로 변경
 - `--compute-type int8` 사용
 
 ### VAD 오류
-- 네트워크 연결 확인 (최초 1회만 필요)
-- Silero VAD 모델을 로컬에 다운로드
-
-## 성능
-
-- 60분 MP3: RTX 4090에서 약 15-20분
-- CPU만 사용 시: 약 2-3시간
+- 네트워크 연결 확인 (최초 1회 모델 다운로드 필요)
+- Silero VAD 모델을 로컬에 미리 다운로드
 
 ## 라이선스
 
